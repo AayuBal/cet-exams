@@ -281,12 +281,6 @@ const HomePage = ({ examType, onExamTypeChange }) => {
 
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-20 lg:py-24 flex flex-col items-center">
-        {/* Resource Status Notice */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 mb-6 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>真题资源恢复：2023年06月 CET-4 / CET-6 完整真题已就绪（含试卷PDF、解析与听力音频）</span>
-        </div>
-
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4 text-center dark:text-white">
           大学英语四六级
         </h1>

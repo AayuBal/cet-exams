@@ -32,6 +32,7 @@ const ExamBrowser = ({ setExamType }) => {
   const [selectedYear, setSelectedYear] = useState(null)
   const [selectedSession, setSelectedSession] = useState(null)
   const [showNewOnly, setShowNewOnly] = useState(false)
+  const [showAvailableOnly, setShowAvailableOnly] = useState(false)
 
   const filteredPapers = useMemo(() => {
     return examPapers.filter(paper => {
@@ -39,17 +40,19 @@ const ExamBrowser = ({ setExamType }) => {
       if (selectedYear && paper.year !== selectedYear) return false
       if (selectedSession && paper.session !== selectedSession) return false
       if (showNewOnly && !paper.isNew) return false
+      if (showAvailableOnly && paper.status !== 'available') return false
       return true
     })
-  }, [selectedYear, selectedSession, showNewOnly, currentType])
+  }, [selectedYear, selectedSession, showNewOnly, showAvailableOnly, currentType])
 
   const clearFilters = () => {
     setSelectedYear(null)
     setSelectedSession(null)
     setShowNewOnly(false)
+    setShowAvailableOnly(false)
   }
 
-  const hasActiveFilters = selectedYear || selectedSession || showNewOnly
+  const hasActiveFilters = selectedYear || selectedSession || showNewOnly || showAvailableOnly
 
   return (
     <div className="min-h-screen bg-white">
@@ -162,6 +165,18 @@ const ExamBrowser = ({ setExamType }) => {
             </div>
           </div>
 
+          {/* Available Only Toggle */}
+          <button
+            onClick={() => setShowAvailableOnly(!showAvailableOnly)}
+            className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded border transition-colors ${
+              showAvailableOnly
+                ? 'bg-emerald-600 text-white border-emerald-600 font-medium'
+                : 'bg-white text-neutral-600 border-neutral-300 hover:border-black'
+            }`}
+          >
+           仅看已就绪真题
+          </button>
+
           {/* New Only Toggle */}
           <button
             onClick={() => setShowNewOnly(!showNewOnly)}
@@ -227,14 +242,24 @@ const ExamBrowser = ({ setExamType }) => {
                     </div>
                   )}
                   {/* Title Overlay */}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-4 pt-12">
-                    <div className="flex items-center gap-2 mb-1">
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                       <span className="text-xs font-medium px-2 py-0.5 bg-white/90 text-neutral-800 rounded">
                         {paper.type}
                       </span>
                       {paper.isNew && (
                         <span className="text-xs font-medium px-2 py-0.5 bg-red-500 text-white rounded">
                           新
+                        </span>
+                      )}
+                      {paper.status === 'available' ? (
+                        <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-500 text-white rounded shadow-sm flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                          真题已就绪
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium px-2 py-0.5 bg-neutral-600/80 text-neutral-200 rounded">
+                          整理中
                         </span>
                       )}
                     </div>
@@ -280,30 +305,40 @@ const ExamBrowser = ({ setExamType }) => {
                   {/* Actions */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {paper.sets?.[0]?.pdfUrl && (
+                      {paper.status === 'available' && paper.sets?.[0]?.pdfUrl ? (
                         <a
                           href={paper.sets[0].pdfUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={e => e.stopPropagation()}
-                          className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           真题PDF
                         </a>
+                      ) : (
+                        <span className="text-xs text-neutral-400 flex items-center gap-1 cursor-not-allowed" title="该套真题资源正在整理中">
+                          <svg className="w-3.5 h-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          资源整理中
+                        </span>
                       )}
                     </div>
                     {(() => {
                       const pct = getPaperProgress(paper.id, paper.sets?.length || 1)
-                      return pct > 0 ? (
-                        <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-300">
-                          {pct >= 100 ? '已完成' : `已阅读 ${pct}%`}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-neutral-400 group-hover:text-black transition-colors font-medium">
-                          开始练习 →
+                      if (pct > 0) {
+                        return (
+                          <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-300">
+                            {pct >= 100 ? '已完成' : `已阅读 ${pct}%`}
+                          </span>
+                        )
+                      }
+                      return (
+                        <span className={`text-sm transition-colors font-medium ${paper.status === 'available' ? 'text-neutral-800 group-hover:text-black font-semibold' : 'text-neutral-400'}`}>
+                          {paper.status === 'available' ? '开始练习 →' : '查看状态 →'}
                         </span>
                       )
                     })()}

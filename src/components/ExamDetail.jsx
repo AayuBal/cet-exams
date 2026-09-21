@@ -12,6 +12,7 @@ import { getTranslationData } from '../data/translation'
 import { useAnnotation } from '../hooks/useAnnotation'
 import AnnotationCanvas from './AnnotationCanvas'
 import AnnotationToolbar from './AnnotationToolbar'
+import AiAssistantModal from './AiAssistantModal'
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
@@ -41,7 +42,8 @@ const saveProgress = (paperId, setIndex, progress) => {
 const ExamDetail = () => {
   const { type, id } = useParams()
   const paper = getPaperById(id)
-  const [selectedSet, setSelectedSet] = useState(0)
+  const defaultSetIndex = paper?.sets?.findIndex(s => s.status === 'available')
+  const [selectedSet, setSelectedSet] = useState(defaultSetIndex !== -1 && defaultSetIndex !== undefined ? defaultSetIndex : 0)
   const [pdfScale, setPdfScale] = useState(1.0)
   const [numPages, setNumPages] = useState(null)
   const [progress, setProgress] = useState(0)
@@ -54,6 +56,7 @@ const ExamDetail = () => {
 
   // 文本选择状态
   const [selectionPopup, setSelectionPopup] = useState(null) // { x, y, text, context }
+  const [aiModalOpen, setAiModalOpen] = useState(false)
 
   // 写作和翻译数据
   const writingData = paper ? getWritingData(paper.id) : null
@@ -139,6 +142,8 @@ const ExamDetail = () => {
   }
 
   const currentSet = paper.sets?.[selectedSet]
+  const availableSetIndex = paper?.sets?.findIndex(s => s.status === 'available') ?? -1
+  const isAvailable = currentSet?.status === 'available'
   const answers = getAnswers(paper.id, selectedSet)
 
   // 选择答案
@@ -300,7 +305,7 @@ const ExamDetail = () => {
             </div>
             <div className="flex items-center gap-2 pb-1 sm:pb-0">
               {/* 模式切换按钮 */}
-              {mode === 'view' && hasAnswers(paper.id, selectedSet) && (
+              {mode === 'view' && isAvailable && hasAnswers(paper.id, selectedSet) && (
                 <button
                   onClick={() => setMode('answer')}
                   className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
@@ -324,7 +329,7 @@ const ExamDetail = () => {
                   重新答题
                 </button>
               )}
-              {currentSet?.analysisPdfUrl && (
+              {currentSet?.status === 'available' && currentSet?.analysisPdfUrl && (
                 <a
                   href={currentSet.analysisPdfUrl}
                   target="_blank"
@@ -334,7 +339,7 @@ const ExamDetail = () => {
                   查看解析
                 </a>
               )}
-              {currentSet?.pdfUrl && (
+              {currentSet?.status === 'available' && currentSet?.pdfUrl && (
                 <a
                   href={currentSet.pdfUrl}
                   download
@@ -343,6 +348,12 @@ const ExamDetail = () => {
                   下载PDF
                 </a>
               )}
+              <button
+                onClick={() => setAiModalOpen(true)}
+                className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded hover:bg-purple-100 transition-colors font-medium flex items-center gap-1"
+              >
+                <span>AI诊断</span>
+              </button>
             </div>
           </div>
         </div>
@@ -352,7 +363,7 @@ const ExamDetail = () => {
       {paper.sets && paper.sets.length > 1 && (
         <div className="border-b border-neutral-200 bg-neutral-50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="flex gap-1 py-2 overflow-x-auto">
+            <div className="flex gap-1.5 py-2 overflow-x-auto">
               {paper.sets.map((set, idx) => (
                 <button
                   key={idx}
@@ -362,13 +373,22 @@ const ExamDetail = () => {
                     setUserAnswers({ listening: [], reading: [], writing: '', translation: '' })
                     setGradingResult(null)
                   }}
-                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded transition-colors whitespace-nowrap ${
+                  className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
                     selectedSet === idx
-                      ? 'bg-black text-white'
+                      ? 'bg-black text-white shadow-sm'
                       : 'bg-white border border-neutral-300 text-neutral-600 hover:border-black'
                   }`}
                 >
-                  {set.name}
+                  <span>{set.name}</span>
+                  {set.status === 'available' ? (
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${selectedSet === idx ? 'bg-emerald-400 text-black' : 'bg-emerald-100 text-emerald-800'}`}>
+                      已就绪
+                    </span>
+                  ) : (
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded ${selectedSet === idx ? 'bg-neutral-700 text-neutral-300' : 'bg-neutral-100 text-neutral-400'}`}>
+                      整理中
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -650,172 +670,228 @@ const ExamDetail = () => {
 
       {/* Content */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Listening Audio - Above PDF */}
-        {currentSet?.audioUrl && (
-          <div className="bg-neutral-50 border-b border-neutral-200 px-4 sm:px-6 py-3 sm:py-4">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                  <span className="text-sm font-medium">听力音频</span>
-                </div>
-                <audio
-                  controls
-                  className="w-full sm:flex-1 h-10 sm:h-8"
-                  src={currentSet.audioUrl}
+        {!isAvailable ? (
+          <div className="flex-1 flex items-center justify-center p-6 bg-neutral-100 min-h-[500px]">
+            <div className="flex flex-col items-center justify-center p-8 text-center bg-white rounded-xl border border-neutral-200 shadow-sm max-w-md w-full">
+              <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-4 text-2xl font-bold">
+                ⏳
+              </div>
+              <h3 className="text-lg font-bold text-neutral-800 mb-2">
+                该套资料正在整理，请先选择其他套题
+              </h3>
+              <p className="text-sm text-neutral-500 mb-6 leading-relaxed">
+                本套试卷的完整题库（真题 PDF、答案解析、听力音频）正在核验补充中。
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  to={`/exam/${type}`}
+                  className="px-4 py-2 text-sm font-medium border border-neutral-300 rounded-lg hover:border-black transition-colors"
                 >
-                  您的浏览器不支持音频播放
-                </audio>
+                  返回试卷列表
+                </Link>
+                {availableSetIndex !== -1 && availableSetIndex !== selectedSet && (
+                  <button
+                    onClick={() => {
+                      setSelectedSet(availableSetIndex)
+                      setMode('view')
+                      setUserAnswers({ listening: [], reading: [], writing: '', translation: '' })
+                      setGradingResult(null)
+                    }}
+                    className="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors"
+                  >
+                    切换至可用套题 ({paper.sets[availableSetIndex]?.name})
+                  </button>
+                )}
               </div>
             </div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Listening Audio - Above PDF */}
+            {currentSet?.audioUrl && (
+              <div className="bg-neutral-50 border-b border-neutral-200 px-4 sm:px-6 py-3 sm:py-4">
+                <div className="max-w-6xl mx-auto">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium">听力音频</span>
+                    </div>
+                    <audio
+                      controls
+                      className="w-full sm:flex-1 h-10 sm:h-8"
+                      src={currentSet.audioUrl}
+                    >
+                      您的浏览器不支持音频播放
+                    </audio>
+                  </div>
+                </div>
+              </div>
+            )}
 
-        {/* PDF Toolbar */}
-        <div className="bg-neutral-50 border-b border-neutral-200 px-4 sm:px-6 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-xs text-neutral-500 hidden sm:inline">缩放:</span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPdfScale(Math.max(0.5, pdfScale - 0.1))}
-                className="w-7 h-7 rounded border border-neutral-300 text-neutral-600 hover:border-black text-xs flex items-center justify-center"
-              >
-                −
-              </button>
-              <span className="text-xs w-12 text-center">{Math.round(pdfScale * 100)}%</span>
-              <button
-                onClick={() => setPdfScale(Math.min(2, pdfScale + 0.1))}
-                className="w-7 h-7 rounded border border-neutral-300 text-neutral-600 hover:border-black text-xs flex items-center justify-center"
-              >
-                +
-              </button>
+            {/* PDF Toolbar */}
+            <div className="bg-neutral-50 border-b border-neutral-200 px-4 sm:px-6 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="text-xs text-neutral-500 hidden sm:inline">缩放:</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setPdfScale(Math.max(0.5, pdfScale - 0.1))}
+                    className="w-7 h-7 rounded border border-neutral-300 text-neutral-600 hover:border-black text-xs flex items-center justify-center"
+                  >
+                    −
+                  </button>
+                  <span className="text-xs w-12 text-center">{Math.round(pdfScale * 100)}%</span>
+                  <button
+                    onClick={() => setPdfScale(Math.min(2, pdfScale + 0.1))}
+                    className="w-7 h-7 rounded border border-neutral-300 text-neutral-600 hover:border-black text-xs flex items-center justify-center"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              {/* Progress Display */}
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-bold px-2 py-1 rounded-full ${progress > 0 ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-neutral-100 text-neutral-400 border border-neutral-300'}`}>
+                  {progress > 0 ? `已阅读 ${progress}%` : '未读'}
+                </span>
+              </div>
+              {currentSet?.pdfUrl && (
+                <a
+                  href={currentSet.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  新窗口
+                </a>
+              )}
             </div>
-          </div>
-          {/* Progress Display */}
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-bold px-2 py-1 rounded-full ${progress > 0 ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-neutral-100 text-neutral-400 border border-neutral-300'}`}>
-              {progress > 0 ? `已阅读 ${progress}%` : '未读'}
-            </span>
-          </div>
-          {currentSet?.pdfUrl && (
-            <a
-              href={currentSet.pdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              新窗口
-            </a>
-          )}
-        </div>
 
-        {/* Annotation Toolbar */}
-        <AnnotationToolbar
-          activeTool={activeTool}
-          onToolChange={setActiveTool}
-          strokeColor={strokeColor}
-          onColorChange={setStrokeColor}
-          strokeWidth={strokeWidth}
-          onWidthChange={setStrokeWidth}
-          onUndo={undo}
-          onClearPage={clearAllAnnotations}
-          canUndo={canUndo}
-          hasAnnotations={hasAnnotations}
-        />
+            {/* Annotation Toolbar */}
+            <AnnotationToolbar
+              activeTool={activeTool}
+              onToolChange={setActiveTool}
+              strokeColor={strokeColor}
+              onColorChange={setStrokeColor}
+              strokeWidth={strokeWidth}
+              onWidthChange={setStrokeWidth}
+              onUndo={undo}
+              onClearPage={clearAllAnnotations}
+              canUndo={canUndo}
+              hasAnnotations={hasAnnotations}
+            />
 
-        {/* PDF Viewer */}
-        <div
-          ref={scrollRef}
-          className={`overflow-y-auto bg-neutral-200 p-2 sm:p-4 relative${isDrawingMode ? ' drawing-mode' : ''}`}
-          style={{ height: mode === 'answer' ? 'calc(100vh - 500px)' : 'calc(100vh - 220px)' }}
-          onMouseUp={isDrawingMode ? undefined : handleTextSelection}
-        >
-          {/* 文本选择浮动按钮 */}
-          {selectionPopup && (
+            {/* PDF Viewer */}
             <div
-              className="absolute z-30 bg-white rounded-lg shadow-lg border border-neutral-200 p-2 flex items-center gap-2"
-              style={{ left: `${selectionPopup.x}px`, top: `${selectionPopup.y}px`, transform: 'translate(-50%, -100%)' }}
+              ref={scrollRef}
+              className={`overflow-y-auto bg-neutral-200 p-2 sm:p-4 relative${isDrawingMode ? ' drawing-mode' : ''}`}
+              style={{ height: mode === 'answer' ? 'calc(100vh - 500px)' : 'calc(100vh - 220px)' }}
+              onMouseUp={isDrawingMode ? undefined : handleTextSelection}
             >
-              <span className="text-sm font-medium text-neutral-700 max-w-32 truncate">{selectionPopup.text}</span>
-              <button
-                onClick={() => handleAddToVocabulary(selectionPopup.text, selectionPopup.context)}
-                className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap"
-              >
-                添加到生词本
-              </button>
-              <button
-                onClick={() => setSelectionPopup(null)}
-                className="text-neutral-400 hover:text-neutral-600"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          )}
-          {currentSet?.pdfUrl ? (
-            <div className="flex justify-center">
-              <Document
-                file={currentSet.pdfUrl}
-                onLoadSuccess={onDocumentLoadSuccess}
-                loading={
-                  <div className="flex items-center justify-center py-20 text-neutral-500 bg-white shadow-2xl">
-                    <span className="text-sm">加载中...</span>
-                  </div>
-                }
-                error={
-                  <div className="flex flex-col items-center justify-center py-20 text-neutral-500 bg-white shadow-2xl gap-2">
-                    <span className="text-sm">PDF 加载失败</span>
-                    <a href={currentSet.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
-                      在新窗口打开
-                    </a>
-                  </div>
-                }
-              >
-                {Array.from(new Array(numPages), (el, index) => (
-                  <div key={`page-${index + 1}`} className="relative" style={{ marginBottom: '8px' }}>
-                    <Page
-                      pageNumber={index + 1}
-                      scale={pdfScale}
-                      width={Math.round(595 * pdfScale)}
-                      renderTextLayer={true}
-                      renderAnnotationLayer={false}
-                      loading={
-                        <div className="bg-white shadow-2xl flex items-center justify-center" style={{ width: `${Math.round(595 * pdfScale)}px`, height: `${Math.round(842 * pdfScale)}px` }}>
-                          <span className="text-sm text-neutral-400">加载页...</span>
+              {/* 文本选择浮动按钮 */}
+              {selectionPopup && (
+                <div
+                  className="absolute z-30 bg-white rounded-lg shadow-lg border border-neutral-200 p-2 flex items-center gap-2"
+                  style={{ left: `${selectionPopup.x}px`, top: `${selectionPopup.y}px`, transform: 'translate(-50%, -100%)' }}
+                >
+                  <span className="text-sm font-medium text-neutral-700 max-w-32 truncate">{selectionPopup.text}</span>
+                  <button
+                    onClick={() => handleAddToVocabulary(selectionPopup.text, selectionPopup.context)}
+                    className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap"
+                  >
+                    添加到生词本
+                  </button>
+                  <button
+                    onClick={() => setSelectionPopup(null)}
+                    className="text-neutral-400 hover:text-neutral-600"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              {currentSet?.pdfUrl ? (
+                <div className="flex justify-center">
+                  <Document
+                    file={currentSet.pdfUrl}
+                    onLoadSuccess={onDocumentLoadSuccess}
+                    loading={
+                      <div className="flex items-center justify-center py-20 text-neutral-500 bg-white shadow-2xl">
+                        <span className="text-sm">加载中...</span>
+                      </div>
+                    }
+                    error={
+                      <div className="flex flex-col items-center justify-center py-16 px-6 text-center bg-white shadow-lg rounded-xl max-w-md mx-auto my-8 gap-3 border border-neutral-200">
+                        <span className="text-amber-500 text-2xl">⚠️</span>
+                        <span className="text-base font-semibold text-neutral-800">该套资料正在整理，请先选择其他套题</span>
+                        <p className="text-xs text-neutral-500">PDF 文件加载失败或链接已失效</p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <Link to={`/exam/${type}`} className="text-xs px-3 py-1.5 border border-neutral-300 rounded hover:border-black">
+                            返回试卷列表
+                          </Link>
+                          {availableSetIndex !== -1 && availableSetIndex !== selectedSet && (
+                            <button
+                              onClick={() => setSelectedSet(availableSetIndex)}
+                              className="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-neutral-800"
+                            >
+                              切换至可用套题
+                            </button>
+                          )}
                         </div>
-                      }
-                    />
-                    <AnnotationCanvas
-                      pageNumber={index + 1}
-                      pageWidth={Math.round(595 * pdfScale)}
-                      pageHeight={Math.round(842 * pdfScale)}
-                      strokes={pageStrokes[index + 1] || []}
-                      isDrawingMode={isDrawingMode}
-                      activeTool={activeTool}
-                      strokeColor={strokeColor}
-                      strokeWidth={strokeWidth}
-                      onStrokeComplete={(stroke) => addStroke(index + 1, stroke)}
-                      pdfScale={pdfScale}
-                    />
-                  </div>
-                ))}
-              </Document>
+                      </div>
+                    }
+                  >
+                    {Array.from(new Array(numPages), (el, index) => (
+                      <div key={`page-${index + 1}`} className="relative" style={{ marginBottom: '8px' }}>
+                        <Page
+                          pageNumber={index + 1}
+                          scale={pdfScale}
+                          width={Math.round(595 * pdfScale)}
+                          renderTextLayer={true}
+                          renderAnnotationLayer={false}
+                          loading={
+                            <div className="bg-white shadow-2xl flex items-center justify-center" style={{ width: `${Math.round(595 * pdfScale)}px`, height: `${Math.round(842 * pdfScale)}px` }}>
+                              <span className="text-sm text-neutral-400">加载页...</span>
+                            </div>
+                          }
+                        />
+                        <AnnotationCanvas
+                          pageNumber={index + 1}
+                          pageWidth={Math.round(595 * pdfScale)}
+                          pageHeight={Math.round(842 * pdfScale)}
+                          strokes={pageStrokes[index + 1] || []}
+                          isDrawingMode={isDrawingMode}
+                          activeTool={activeTool}
+                          strokeColor={strokeColor}
+                          strokeWidth={strokeWidth}
+                          onStrokeComplete={(stroke) => addStroke(index + 1, stroke)}
+                          pdfScale={pdfScale}
+                        />
+                      </div>
+                    ))}
+                  </Document>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-neutral-400 py-16">
+                  <p className="mb-4">该套资料正在整理，请先选择其他套题</p>
+                  <Link to={`/exam/${type}`} className="text-xs px-3 py-1.5 border border-neutral-300 rounded hover:border-black text-neutral-700">
+                    返回试卷列表
+                  </Link>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-neutral-400">
-              暂无真题PDF
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
+
+      <AiAssistantModal isOpen={aiModalOpen} onClose={() => setAiModalOpen(false)} />
     </div>
   )
 }

@@ -1,0 +1,109 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-09-20T17:30:30.349Z",
+  "assetBaseConfigured": false,
+  "p0Status": "ready",
+  "summary": {
+    "total": 8,
+    "available": 8,
+    "pending": 0
+  },
+  "assets": [
+    {
+      "id": "paper-cet4-2023-06-1",
+      "type": "paper",
+      "exam": "CET-4",
+      "year": 2023,
+      "session": "06",
+      "set": 1,
+      "url": "/cet/papers/cet4/2023-06-1.pdf",
+      "status": "available",
+      "size": 2933516,
+      "sha256": "aaa54dab278ffc147bd5ccdad008f9ee9691892941adcf2026248959b2a1fcb8"
+    },
+    {
+      "id": "analysis-cet4-2023-06-1",
+      "type": "analysis",
+      "exam": "CET-4",
+      "year": 2023,
+      "session": "06",
+      "set": 1,
+      "url": "/cet/analysis/cet4/2023-06-1.pdf",
+      "status": "available",
+      "size": 7056193,
+      "sha256": "cb78efaa7ae6f12ecb1f6c98ffc7b88cf4a5fbad983aa585073fc108e047e905"
+    },
+    {
+      "id": "audio-cet4-2023-06-1",
+      "type": "audio",
+      "exam": "CET-4",
+      "year": 2023,
+      "session": "06",
+      "set": 1,
+      "url": "/cet/audio/cet4/2023-06-1.mp3",
+      "status": "available",
+      "size": 17186429,
+      "sha256": "d85ed9e9b550478e10833c463c7147c6e31dc5b18d109d2fd656343fd3a2a604"
+    },
+    {
+      "id": "cover-cet4-2023-06",
+      "type": "cover",
+      "exam": "CET-4",
+      "year": 2023,
+      "session": "06",
+      "set": 1,
+      "url": "/cet/covers/cet4/2023-06.png",
+      "status": "available",
+      "size": 283509,
+      "sha256": "8b11e8f0680bc2921723b8babb3ee89422690c7444a46efbcb502e45da00db4f"
+    },
+    {
+      "id": "paper-cet6-2023-06-1",
+      "type": "paper",
+      "exam": "CET-6",
+      "year": 2023,
+      "session": "06",
+      "set": 1,
+      "url": "/cet/papers/cet6/2023-06-1.pdf",
+      "status": "available",
+      "size": 5265740,
+      "sha256": "08e8b936e2a1a754ac704bb7b9a88f45e008877d8015a2867f26dde0285ee941"
+    },
+    {
+      "id": "analysis-cet6-2023-06-1",
+      "type": "analysis",
+      "exam": "CET-6",
+      "year": 2023,
+      "session": "06",
+      "set": 1,
+      "url": "/cet/analysis/cet6/2023-06-1.pdf",
+      "status": "available",
+      "size": 11502462,
+      "sha256": "497d330ecbedfbba426c7c39bfeca173be8cee2f3140d8470610e4f102d8da49"
+    },
+    {
+      "id": "audio-cet6-2023-06-1",
+      "type": "audio",
+      "exam": "CET-6",
+      "year": 2023,
+      "session": "06",
+      "set": 1,
+      "url": "/cet/audio/cet6/2023-06-1.mp3",
+      "status": "available",
+      "size": 19833661,
+      "sha256": "1d3163ea7f77b73ee4fc29a124afbd0e95d4029f826289c4c14ee66bdfb884b3"
+    },
+    {
+      "id": "cover-cet6-2023-06",
+      "type": "cover",
+      "exam": "CET-6",
+      "year": 2023,
+      "session": "06",
+      "set": 1,
+      "url": "/cet/covers/cet6/2023-06.png",
+      "status": "available",
+      "size": 359132,
+      "sha256": "d478f6d2c765cf5c627af0cd8eeda7a5b8a9235698ca2fd41b8b99deaf21852d"
+    }
+  ]
+}

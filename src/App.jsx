@@ -10,6 +10,7 @@ import Dashboard from './components/Dashboard'
 import ErrorBook from './components/ErrorBook'
 import Settings from './components/Settings'
 import ReviewMaterials from './components/ReviewMaterials'
+import AiAssistantModal from './components/AiAssistantModal'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'
 
 // Navigation Component
@@ -233,6 +234,7 @@ const HomePage = ({ examType, onExamTypeChange }) => {
   const [visitorLoaded, setVisitorLoaded] = useState(false)
   const [displayToday, setDisplayToday] = useState(0)
   const [displayTotal, setDisplayTotal] = useState(0)
+  const [aiModalOpen, setAiModalOpen] = useState(false)
 
   useEffect(() => {
     const todayStr = new Date().toISOString().split('T')[0]
@@ -278,12 +280,18 @@ const HomePage = ({ examType, onExamTypeChange }) => {
       <Navigation examType={examType} onExamTypeChange={onExamTypeChange} />
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-24 lg:py-32 flex flex-col items-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4 text-center">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-20 lg:py-24 flex flex-col items-center">
+        {/* Resource Status Notice */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 mb-6 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>真题资源恢复：2023年06月 CET-4 / CET-6 完整真题已就绪（含试卷PDF、解析与听力音频）</span>
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4 text-center dark:text-white">
           大学英语四六级
         </h1>
-        <p className="text-neutral-500 text-base md:text-lg mb-6 md:mb-8 text-center">
-          收集了2019-2025的大学英语四六级真题
+        <p className="text-neutral-500 dark:text-neutral-400 text-base md:text-lg mb-6 md:mb-8 text-center">
+          收录历年大学英语四六级真题，支持在线答题、听力播放、智能批改与错题归档
         </p>
 
         {/* Buttons and Countdown */}
@@ -292,8 +300,8 @@ const HomePage = ({ examType, onExamTypeChange }) => {
             to="/exam/cet4"
             className={`w-full sm:w-auto px-4 sm:px-6 md:px-8 py-3 md:py-4 text-sm md:text-base font-medium text-center transition-all duration-200 hover:scale-105 hover:shadow-lg ${
               examType === 'CET-4'
-                ? 'bg-black text-white'
-                : 'bg-white text-black border border-black'
+                ? 'bg-black text-white dark:bg-white dark:text-black'
+                : 'bg-white text-black border border-black dark:bg-neutral-800 dark:text-white dark:border-neutral-600'
             }`}
           >
             CET-4真题
@@ -302,65 +310,98 @@ const HomePage = ({ examType, onExamTypeChange }) => {
             to="/exam/cet6"
             className={`w-full sm:w-auto px-4 sm:px-6 md:px-8 py-3 md:py-4 text-sm md:text-base font-medium text-center transition-all duration-200 hover:scale-105 hover:shadow-lg ${
               examType === 'CET-6'
-                ? 'bg-black text-white'
-                : 'bg-white text-black border border-black'
+                ? 'bg-black text-white dark:bg-white dark:text-black'
+                : 'bg-white text-black border border-black dark:bg-neutral-800 dark:text-white dark:border-neutral-600'
             }`}
           >
             CET-6真题
           </Link>
 
           {/* Countdown */}
-          <div className="border-2 border-black rounded-2xl px-3 sm:px-4 py-2 text-center flex items-center gap-2 sm:gap-3 transition-transform duration-300 hover:scale-[1.02] w-full sm:w-auto justify-center" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}>
-            <span className="text-xs sm:text-sm font-bold">距CET考试还有</span>
-            <span className="text-xl sm:text-2xl font-bold">{days.toFixed(1)}</span>
-            <span className="text-xs sm:text-sm font-bold">天</span>
-            <span className="text-xs text-neutral-500 font-medium">（{examDateStr}）</span>
+          <div className="border-2 border-black dark:border-neutral-700 rounded-2xl px-3 sm:px-4 py-2 text-center flex items-center gap-2 sm:gap-3 transition-transform duration-300 hover:scale-[1.02] w-full sm:w-auto justify-center bg-white dark:bg-neutral-800" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+            <span className="text-xs sm:text-sm font-bold dark:text-white">距CET考试还有</span>
+            <span className="text-xl sm:text-2xl font-bold dark:text-white">{days.toFixed(1)}</span>
+            <span className="text-xs sm:text-sm font-bold dark:text-white">天</span>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">（{examDateStr}）</span>
           </div>
         </div>
 
         {/* Visitor Counter */}
         {visitorLoaded && (
-        <div className="flex items-center justify-center gap-6 sm:gap-10 mb-6 md:mb-8 text-neutral-400">
+        <div className="flex items-center justify-center gap-6 sm:gap-10 mb-8 md:mb-10 text-neutral-400">
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
-            <span className="text-sm">今日学习人数：<span className="font-bold text-neutral-600">{displayToday}</span></span>
+            <span className="text-sm">今日学习人数：<span className="font-bold text-neutral-600 dark:text-neutral-300">{displayToday}</span></span>
           </div>
-          <div className="w-px h-4 bg-neutral-300" />
+          <div className="w-px h-4 bg-neutral-300 dark:bg-neutral-700" />
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            <span className="text-sm">总访问次数：<span className="font-bold text-neutral-600">{displayTotal.toLocaleString()}</span></span>
+            <span className="text-sm">总访问次数：<span className="font-bold text-neutral-600 dark:text-neutral-300">{displayTotal.toLocaleString()}</span></span>
           </div>
         </div>
         )}
 
-        {/* Python Review Entry */}
-        <div className="mb-6 md:mb-8 w-full max-w-lg sm:max-w-xl">
-          <a
-            href="/python-review.html"
-            className="group block border-2 border-neutral-200 rounded-xl p-5 sm:p-6 hover:border-black transition-all duration-300 hover:shadow-lg"
+        {/* Feature Cards: AI Assistant & Review Materials */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mb-8">
+          {/* AI Assistant Card */}
+          <button
+            onClick={() => setAiModalOpen(true)}
+            className="group text-left border-2 border-neutral-200 dark:border-neutral-700 rounded-xl p-5 hover:border-black dark:hover:border-white transition-all duration-300 hover:shadow-lg bg-white dark:bg-neutral-800"
           >
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-700 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
+              <div className="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 text-white font-bold text-base shadow-sm">
+                AI
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-base sm:text-lg font-bold mb-1">Python 期末复习资料</h3>
-                <p className="text-sm text-neutral-500">Python编程实践课程期末考试知识点总结，涵盖基础语法、数据结构、函数、面向对象等全部章节</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-base font-bold dark:text-white">AI 辅助学习</h3>
+                  <span className="text-[10px] bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded font-medium">原型</span>
+                </div>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                  作文结构自查、常见语法易错排雷与本地错题统计建议
+                </p>
               </div>
-              <svg className="w-5 h-5 text-neutral-400 group-hover:text-black group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-neutral-400 group-hover:text-black dark:group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
-          </a>
+          </button>
+
+          {/* CET Review Materials Card */}
+          <Link
+            to="/review"
+            className="group text-left border-2 border-neutral-200 dark:border-neutral-700 rounded-xl p-5 hover:border-black dark:hover:border-white transition-all duration-300 hover:shadow-lg bg-white dark:bg-neutral-800"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 text-white shadow-sm">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-base font-bold dark:text-white">四六级复习资料</h3>
+                  <span className="text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-medium">精选</span>
+                </div>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                  核心高频词库、SM-2记忆闪卡、真题范文精析与汉译英技巧
+                </p>
+              </div>
+              <svg className="w-5 h-5 text-neutral-400 group-hover:text-black dark:group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </Link>
         </div>
       </section>
+
+      {/* AI Assistant Modal */}
+      <AiAssistantModal isOpen={aiModalOpen} onClose={() => setAiModalOpen(false)} />
 
     </div>
   )

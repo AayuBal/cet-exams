@@ -13,7 +13,6 @@ dist-ssr
 *.local
 .env
 .vercel
-public/
 四级真题/
 六级真题/
 

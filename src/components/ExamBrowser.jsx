@@ -212,11 +212,19 @@ const ExamBrowser = ({ setExamType }) => {
           {filteredPapers.map(paper => {
             const stats = getPaperStats(paper)
             return (
-              <Link
+              <div
                 key={paper.id}
-                to={`/exam/${currentType === 'CET-6' ? 'cet6' : 'cet4'}/${paper.id}`}
+                role="link"
+                tabIndex={0}
                 className="group block rounded-xl overflow-hidden border-2 border-neutral-200 transition-all duration-300"
                 style={{ transition: 'all 0.3s ease' }}
+                onClick={() => navigate(`/exam/${currentType === 'CET-6' ? 'cet6' : 'cet4'}/${paper.id}`)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    navigate(`/exam/${currentType === 'CET-6' ? 'cet6' : 'cet4'}/${paper.id}`)
+                  }
+                }}
                 onMouseEnter={e => {
                   e.currentTarget.style.borderColor = '#000000'
                   e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.15)'
@@ -344,7 +352,7 @@ const ExamBrowser = ({ setExamType }) => {
                     })()}
                   </div>
                 </div>
-              </Link>
+              </div>
             )
           })}
         </div>

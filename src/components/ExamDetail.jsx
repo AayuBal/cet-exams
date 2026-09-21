@@ -9,6 +9,7 @@ import { lookupWord } from '../utils/dictionary'
 import { getAnswers, hasAnswers } from '../data/answers'
 import { getWritingData } from '../data/writing'
 import { getTranslationData } from '../data/translation'
+import { quarkDownloadLinks } from '../data/quarkLinks'
 import { useAnnotation } from '../hooks/useAnnotation'
 import AnnotationCanvas from './AnnotationCanvas'
 import AnnotationToolbar from './AnnotationToolbar'
@@ -42,6 +43,7 @@ const saveProgress = (paperId, setIndex, progress) => {
 const ExamDetail = () => {
   const { type, id } = useParams()
   const paper = getPaperById(id)
+  const quarkDownloadUrl = paper ? quarkDownloadLinks[paper.type] : null
   const defaultSetIndex = paper?.sets?.findIndex(s => s.status === 'available')
   const [selectedSet, setSelectedSet] = useState(defaultSetIndex !== -1 && defaultSetIndex !== undefined ? defaultSetIndex : 0)
   const [pdfScale, setPdfScale] = useState(1.0)
@@ -346,6 +348,16 @@ const ExamDetail = () => {
                   className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 bg-black text-white rounded hover:bg-neutral-800 transition-colors"
                 >
                   下载PDF
+                </a>
+              )}
+              {quarkDownloadUrl && (
+                <a
+                  href={quarkDownloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 border border-emerald-300 text-emerald-700 bg-emerald-50 rounded hover:bg-emerald-100 transition-colors whitespace-nowrap"
+                >
+                  夸克网盘下载
                 </a>
               )}
               <button

@@ -342,22 +342,22 @@ const HomePage = ({ examType, onExamTypeChange }) => {
 
         {/* Feature Cards: AI Assistant & Review Materials */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mb-8">
-          {/* AI Assistant Card */}
+          {/* Study self-check card */}
           <button
             onClick={() => setAiModalOpen(true)}
-            className="group text-left border-2 border-neutral-200 dark:border-neutral-700 rounded-xl p-5 hover:border-black dark:hover:border-white transition-all duration-300 hover:shadow-lg bg-white dark:bg-neutral-800"
+            className="group text-left border-2 border-neutral-300 dark:border-neutral-700 rounded-xl p-5 hover:border-black dark:hover:border-white transition-all duration-300 hover:shadow-lg bg-[#f8f6f1] dark:bg-neutral-800"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 text-white font-bold text-base shadow-sm">
-                AI
+              <div className="w-12 h-12 bg-black rounded-sm rotate-[-2deg] flex items-center justify-center flex-shrink-0 group-hover:rotate-0 transition-transform duration-300 text-white font-bold text-xs shadow-sm">
+                自查
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-base font-bold dark:text-white">AI 辅助学习</h3>
-                  <span className="text-[10px] bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded font-medium">原型</span>
+                  <h3 className="text-base font-bold dark:text-white">学习自查</h3>
+                  <span className="text-[10px] bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded-sm font-medium">试用</span>
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">
-                  作文结构自查、常见语法易错排雷与本地错题统计建议
+                  写作看结构，句子查语法，错题按类型归拢。
                 </p>
               </div>
               <svg className="w-5 h-5 text-neutral-400 group-hover:text-black dark:group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -366,24 +366,24 @@ const HomePage = ({ examType, onExamTypeChange }) => {
             </div>
           </button>
 
-          {/* CET Review Materials Card */}
+          {/* Review materials card */}
           <Link
             to="/review"
-            className="group text-left border-2 border-neutral-200 dark:border-neutral-700 rounded-xl p-5 hover:border-black dark:hover:border-white transition-all duration-300 hover:shadow-lg bg-white dark:bg-neutral-800"
+            className="group text-left border-2 border-neutral-300 dark:border-neutral-700 rounded-xl p-5 hover:border-black dark:hover:border-white transition-all duration-300 hover:shadow-lg bg-[#f8f6f1] dark:bg-neutral-800"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 text-white shadow-sm">
+              <div className="w-12 h-12 bg-[#d7c6a2] rounded-sm rotate-[2deg] flex items-center justify-center flex-shrink-0 group-hover:rotate-0 transition-transform duration-300 text-black shadow-sm">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-base font-bold dark:text-white">四六级复习资料</h3>
-                  <span className="text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-medium">精选</span>
+                  <h3 className="text-base font-bold dark:text-white">复习资料</h3>
+                  <span className="text-[10px] bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 px-1.5 py-0.5 rounded-sm font-medium">资料</span>
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">
-                  核心高频词库、SM-2记忆闪卡、真题范文精析与汉译英技巧
+                  词汇、闪卡、范文和翻译练习，想练哪块就点哪块。
                 </p>
               </div>
               <svg className="w-5 h-5 text-neutral-400 group-hover:text-black dark:group-hover:text-white group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

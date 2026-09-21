@@ -48,8 +48,10 @@ const ExamDetail = () => {
   const [selectedSet, setSelectedSet] = useState(defaultSetIndex !== -1 && defaultSetIndex !== undefined ? defaultSetIndex : 0)
   const [pdfScale, setPdfScale] = useState(1.0)
   const [numPages, setNumPages] = useState(null)
+  const [pageCropHeights, setPageCropHeights] = useState({})
   const [progress, setProgress] = useState(0)
   const scrollRef = useRef(null)
+  const pageRefs = useRef({})
 
   // 答题/批改状态
   const [mode, setMode] = useState('view') // 'view' | 'answer' | 'result'
@@ -94,6 +96,54 @@ const ExamDetail = () => {
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages)
   }
+
+  // PDF 原页通常是完整 A4 纸张，但真题内容只占页面上半部分。
+  // 预览时根据画布中最后一行非白色像素收紧高度，下载文件仍保持原始 PDF。
+  const measurePageContent = useCallback((pageNumber) => {
+    requestAnimationFrame(() => {
+      const wrapper = pageRefs.current[pageNumber]
+      const canvas = wrapper?.querySelector('.react-pdf__Page__canvas')
+      if (!canvas || !canvas.width || !canvas.height) return
+
+      try {
+        const context = canvas.getContext('2d', { willReadFrequently: true })
+        const pixels = context?.getImageData(0, 0, canvas.width, canvas.height).data
+        if (!pixels) return
+
+        let lastContentRow = -1
+        for (let y = canvas.height - 1; y >= 0 && lastContentRow < 0; y -= 2) {
+          for (let x = 0; x < canvas.width; x += 2) {
+            const offset = (y * canvas.width + x) * 4
+            const alpha = pixels[offset + 3]
+            const brightness = (pixels[offset] + pixels[offset + 1] + pixels[offset + 2]) / 3
+            if (alpha > 0 && brightness < 245) {
+              lastContentRow = y
+              break
+            }
+          }
+        }
+
+        if (lastContentRow < 0) return
+        const canvasRect = canvas.getBoundingClientRect()
+        const fullHeight = canvasRect.height
+        const cropHeight = Math.min(fullHeight, Math.max(160, (lastContentRow + 1) * (fullHeight / canvas.height) + 18))
+        if (cropHeight >= fullHeight - 24) return
+
+        setPageCropHeights(previous => {
+          const oldHeight = previous[pageNumber]
+          if (oldHeight && Math.abs(oldHeight - cropHeight) < 2) return previous
+          return { ...previous, [pageNumber]: cropHeight }
+        })
+      } catch {
+        // 某些浏览器限制读取画布时，保留原始页面高度即可。
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    pageRefs.current = {}
+    setPageCropHeights({})
+  }, [id, selectedSet, pdfScale])
 
   const saveTimerRef = useRef(null)
 
@@ -861,11 +911,20 @@ const ExamDetail = () => {
                     }
                   >
                     {Array.from(new Array(numPages), (el, index) => (
-                      <div key={`page-${index + 1}`} className="relative" style={{ marginBottom: '8px' }}>
+                      <div
+                        key={`page-${index + 1}`}
+                        ref={node => { pageRefs.current[index + 1] = node }}
+                        className="relative overflow-hidden"
+                        style={{
+                          marginBottom: '8px',
+                          height: pageCropHeights[index + 1] ? `${pageCropHeights[index + 1]}px` : undefined,
+                        }}
+                      >
                         <Page
                           pageNumber={index + 1}
                           scale={pdfScale}
                           width={Math.round(595 * pdfScale)}
+                          onRenderSuccess={() => measurePageContent(index + 1)}
                           renderTextLayer={true}
                           renderAnnotationLayer={false}
                           loading={
